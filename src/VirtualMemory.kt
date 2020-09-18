@@ -1,5 +1,4 @@
 import java.util.*
-import kotlin.test.currentStackTrace
 
 fun FIFO(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?> {
     val pageInMemory = (0..numPages).map {false}.toMutableList()
@@ -37,13 +36,12 @@ fun LRU(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?> {
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val lastUsed = (0..numPages).map {-1}.toMutableList()
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
-//    val substituteCandidates = TreeSet<Pair<Int, Int>>((1..numFrames).map {-1 to it})
     val substituteCandidates = (1..numFrames).map {-1 to it}.toSortedSet(C())
     val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
     for ((accessedIndex, page) in accessedPages.withIndex()) {
         val oldFrame = frameOfPage[page]
         if (oldFrame != null) {
-            substituteCandidates.remove(lastUsed[page] to page)
+            substituteCandidates.remove(lastUsed[page] to oldFrame)
             lastUsed[page] = accessedIndex
             substituteCandidates.add(accessedIndex to oldFrame)
         }
@@ -63,6 +61,38 @@ fun LRU(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?> {
     return frameToSubstitute
 }
 
+fun OPT(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?> {
+    val lastPosition = arrayOfNulls<Int>(numPages + 1)
+    val nextPosition = arrayOfNulls<Int>(accessedPages.size)
+    for ((accessedIndex, page) in accessedPages.withIndex().reversed()) {
+        nextPosition[accessedIndex] = lastPosition[page]
+        lastPosition[page] = accessedIndex
+    }
+    val frameOfPage = arrayOfNulls<Int>(numPages + 1)
+    val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
+    val substituteCandidates = (1..numFrames).map {accessedPages.size to it}.toSortedSet(C())
+    val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
+    for ((accessedIndex, page) in accessedPages.withIndex()) {
+        val oldFrame = frameOfPage[page]
+        if (oldFrame != null) {
+            substituteCandidates.remove(accessedIndex to oldFrame)
+            substituteCandidates.add((nextPosition[accessedIndex]?: accessedPages.size) to oldFrame)
+        }
+        else {
+            val currentFrame = substituteCandidates.last().second
+            substituteCandidates.remove(substituteCandidates.last())
+            val oldPage = pageInFrame[currentFrame]
+            if (oldPage != null)
+                frameOfPage[oldPage] = null
+            frameToSubstitute[accessedIndex] = currentFrame
+            pageInFrame[currentFrame] = page
+            frameOfPage[page] = currentFrame
+            substituteCandidates.add((nextPosition[accessedIndex]?: accessedPages.size) to currentFrame)
+        }
+    }
+    return frameToSubstitute
+}
+
 fun main() {
     val accessed = listOf(1, 2, 5, 3, 2, 1, 4, 2, 5)
     val resFIFO = FIFO(5, 3, accessed)
@@ -71,5 +101,9 @@ fun main() {
     println()
     val resLRU = LRU(5, 3, accessed)
     for (i in resLRU)
+        println(i)
+    println()
+    val resOPT = OPT(5, 3, accessed)
+    for (i in resOPT)
         println(i)
 }
