@@ -1,4 +1,5 @@
 import java.util.*
+import kotlin.random.Random.Default.nextInt
 
 fun interface SubstitutionAlgorithm {
     fun apply(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?>
@@ -116,8 +117,10 @@ fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>,
     return true
 }
 
+fun generateAccessSequence(numPages: Int, numAccesses: Int) = (1..numAccesses).map {nextInt(1, numPages + 1)}
+
 fun main() {
-    val accessed = listOf(1, 2, 5, 3, 2, 1, 4, 2, 5)
+    val accessed = generateAccessSequence(5, 20)
     val resFIFO = FIFO.apply(5, 3, accessed)
     assert(isValidSubstitution(5, 3, accessed, resFIFO))
     for (i in resFIFO)
