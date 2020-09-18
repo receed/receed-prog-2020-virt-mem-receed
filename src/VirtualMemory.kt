@@ -1,4 +1,5 @@
 import java.util.*
+import kotlin.test.currentStackTrace
 
 fun FIFO(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?> {
     val pageInMemory = (0..numPages).map {false}.toMutableList()
@@ -93,17 +94,42 @@ fun OPT(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?> {
     return frameToSubstitute
 }
 
+fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, frameToSubstitute: Array<Int?>): Boolean {
+    val frameOfPage = arrayOfNulls<Int>(numPages + 1)
+    val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
+    for ((accessedIndex, page) in accessedPages.withIndex()) {
+        val currentFrame = frameToSubstitute[accessedIndex]
+        if (currentFrame == null) {
+            if (frameOfPage[page] == null)
+                return false
+        }
+        else {
+            if (frameOfPage[page] != null)
+                return false
+            val oldPage = pageInFrame[currentFrame]
+            if (oldPage != null)
+                frameOfPage[oldPage] = null
+            pageInFrame[currentFrame] = page
+            frameOfPage[page] = currentFrame
+        }
+    }
+    return true
+}
+
 fun main() {
     val accessed = listOf(1, 2, 5, 3, 2, 1, 4, 2, 5)
     val resFIFO = FIFO(5, 3, accessed)
+    assert(isValidSubstitution(5, 3, accessed, resFIFO))
     for (i in resFIFO)
         println(i)
     println()
     val resLRU = LRU(5, 3, accessed)
+    assert(isValidSubstitution(5, 3, accessed, resLRU))
     for (i in resLRU)
         println(i)
     println()
     val resOPT = OPT(5, 3, accessed)
+    assert(isValidSubstitution(5, 3, accessed, resOPT))
     for (i in resOPT)
         println(i)
 }
