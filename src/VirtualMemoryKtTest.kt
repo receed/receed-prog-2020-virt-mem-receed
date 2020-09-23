@@ -13,6 +13,6 @@ internal class VirtualMemoryKtTest {
     }
     @Test
     fun testOPT() {
-        assertEquals(listOf(null), OPT.apply(task1))
+        assertEquals(listOf(1, 2, 3, 3, 0, 0, 1, 0, 1), OPT.apply(task1))
     }
 }

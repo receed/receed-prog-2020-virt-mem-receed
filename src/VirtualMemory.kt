@@ -84,19 +84,19 @@ val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     }
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
-    val substituteCandidates = (1..numFrames).map { accessedPages.size to it }.toSortedSet(PairComparator())
+    val substituteCandidates = (1..numFrames).map { -accessedPages.size to it }.toSortedSet(PairComparator())
     val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
     for ((accessedIndex, page) in accessedPages.withIndex()) {
         val oldFrame = frameOfPage[page]
         if (oldFrame != null) {
-            substituteCandidates.remove(accessedIndex to oldFrame)
-            substituteCandidates.add((nextPosition[accessedIndex] ?: accessedPages.size) to oldFrame)
+            substituteCandidates.remove(-accessedIndex to oldFrame)
+            substituteCandidates.add(-(nextPosition[accessedIndex] ?: accessedPages.size) to oldFrame)
         } else {
-            val currentFrame = substituteCandidates.last().second
-            substituteCandidates.remove(substituteCandidates.last())
+            val currentFrame = substituteCandidates.first().second
+            substituteCandidates.remove(substituteCandidates.first())
             frameToSubstitute[accessedIndex] = currentFrame
             assignFrame(page, currentFrame, pageInFrame, frameOfPage)
-            substituteCandidates.add((nextPosition[accessedIndex] ?: accessedPages.size) to currentFrame)
+            substituteCandidates.add(-(nextPosition[accessedIndex] ?: accessedPages.size) to currentFrame)
         }
     }
     frameToSubstitute
