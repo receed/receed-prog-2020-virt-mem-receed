@@ -1,13 +1,14 @@
 import java.io.File
 import java.util.*
 import kotlin.random.Random.Default.nextInt
-import kotlin.test.currentStackTrace
 
+// Describes a common interface for substitution algorithms
 fun interface SubstitutionAlgorithm {
     fun apply(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?>
     fun apply(task: Task): Array<Int?> = apply(task.numPages, task.numFrames, task.accessedPages)
 }
 
+// Puts page in frame, removing an old page in it
 fun assignFrame(page: Int, frame: Int, pageInFrame: Array<Int?>, frameOfPage: Array<Int?>) {
     val oldPage = pageInFrame[frame]
     if (oldPage != null)
@@ -16,6 +17,7 @@ fun assignFrame(page: Int, frame: Int, pageInFrame: Array<Int?>, frameOfPage: Ar
     frameOfPage[page] = frame
 }
 
+// First in - first out algorithm
 val FIFO = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
@@ -36,6 +38,7 @@ val FIFO = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     frameToSubstitute
 }
 
+// Compares two pairs. Needed to efficiently find best frame in LRU and OPT
 class C : Comparator<Pair<Int, Int>> {
     override fun compare(p0: Pair<Int, Int>?, p1: Pair<Int, Int>?): Int {
         if (p0 == null || p1 == null)
@@ -46,6 +49,7 @@ class C : Comparator<Pair<Int, Int>> {
     }
 }
 
+// Least recently used algorithm
 val LRU = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val lastUsed = (0..numPages).map { -1 }.toMutableList()
@@ -70,6 +74,7 @@ val LRU = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     frameToSubstitute
 }
 
+// Optimal algorithm
 val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     val lastPosition = arrayOfNulls<Int>(numPages + 1)
     val nextPosition = arrayOfNulls<Int>(accessedPages.size)
@@ -97,7 +102,7 @@ val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     frameToSubstitute
 }
 
-
+// Checks if the given substitution list is valid
 fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, frameToSubstitute: Array<Int?>): Boolean {
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
@@ -115,14 +120,17 @@ fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>,
     return true
 }
 
+// Generates random sequence of accessed page numbers
 fun generateAccessSequence(numPages: Int, numAccesses: Int) = (1..numAccesses).map {nextInt(1, numPages + 1)}
 
+// Counts score (number of substitutions) of the given substitution list
 fun countScore(frameToSubstitute: Array<Int?>) = frameToSubstitute.count {it != null}
 
 class Task(val numPages: Int, val numFrames: Int, val accessedPages: List<Int>)
 
 class InvalidInputException(message: String) : Exception(message)
 
+// Reads constraints and accessed page number from a file
 fun readInput(inputFileName: String): List<Task> {
     val inputFile = File(inputFileName)
     if (!inputFile.exists())
@@ -144,6 +152,7 @@ fun readInput(inputFileName: String): List<Task> {
     }
 }
 
+// Returns results of different algorithms
 fun generateReport(task: Task): String {
     val algorithms = listOf(FIFO to "FIFO", LRU to "LRU", OPT to "OPT")
     return algorithms.joinToString("\n") { (algorithm, name) ->
@@ -153,13 +162,17 @@ fun generateReport(task: Task): String {
         "$name (score $score): $resultString"
     }
 }
-fun runFromFiles(args: Array<String>) {
-    for (inputFileName in args) {
+
+// Runs all algorithms for all input files
+fun runFromFiles(files: Array<String>) {
+    for (inputFileName in files) {
         val tasks = readInput(inputFileName)
         val outputFile = File("$inputFileName.out")
         outputFile.writeText(tasks.joinToString("\n") { generateReport(it) })
     }
 }
+
+// Entry point
 fun main(args: Array<String>) {
     runFromFiles(args)
 //    val accessed = generateAccessSequence(5, 20)
