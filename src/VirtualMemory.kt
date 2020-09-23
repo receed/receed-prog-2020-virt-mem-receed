@@ -39,7 +39,7 @@ val FIFO = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
 }
 
 // Compares two pairs. Needed to efficiently find best frame in LRU and OPT
-class C : Comparator<Pair<Int, Int>> {
+class PairComparator : Comparator<Pair<Int, Int>> {
     override fun compare(p0: Pair<Int, Int>?, p1: Pair<Int, Int>?): Int {
         if (p0 == null || p1 == null)
             return 0
@@ -54,7 +54,7 @@ val LRU = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val lastUsed = (0..numPages).map { -1 }.toMutableList()
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
-    val substituteCandidates = (1..numFrames).map { -1 to it }.toSortedSet(C())
+    val substituteCandidates = (1..numFrames).map { -1 to it }.toSortedSet(PairComparator())
     val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
     for ((accessedIndex, page) in accessedPages.withIndex()) {
         val oldFrame = frameOfPage[page]
@@ -84,7 +84,7 @@ val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     }
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
-    val substituteCandidates = (1..numFrames).map { accessedPages.size to it }.toSortedSet(C())
+    val substituteCandidates = (1..numFrames).map { accessedPages.size to it }.toSortedSet(PairComparator())
     val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
     for ((accessedIndex, page) in accessedPages.withIndex()) {
         val oldFrame = frameOfPage[page]
@@ -158,7 +158,7 @@ fun generateReport(task: Task): String {
     return algorithms.joinToString("\n") { (algorithm, name) ->
         val result = algorithm.apply(task)
         val score = countScore(result)
-        val resultString = result.joinToString(" ") { it?.toString() ?: "-1" }
+        val resultString = result.joinToString(" ") { it?.toString() ?: "0" }
         "$name (score $score): $resultString"
     }
 }
