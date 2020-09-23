@@ -1,27 +1,34 @@
 import java.util.*
 import kotlin.random.Random.Default.nextInt
+import kotlin.test.currentStackTrace
 
 fun interface SubstitutionAlgorithm {
     fun apply(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?>
 }
 
+fun assignFrame(page: Int, frame: Int, pageInFrame: Array<Int?>, frameOfPage: Array<Int?>) {
+    val oldPage = pageInFrame[frame]
+    if (oldPage != null)
+        frameOfPage[oldPage] = null
+    pageInFrame[frame] = page
+    frameOfPage[page] = frame
+}
+
 val FIFO = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
-    val pageInMemory = (0..numPages).map { false }.toMutableList()
+    val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
     val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
     var currentFrame = 1
     for ((accessedIndex, page) in accessedPages.withIndex()) {
-        if (!pageInMemory[page]) {
-            val oldPage = pageInFrame[currentFrame]
-            if (oldPage != null)
-                pageInMemory[oldPage] = false
+        val oldFrame = frameOfPage[page]
+        if (oldFrame == null) {
             frameToSubstitute[accessedIndex] = currentFrame
-            pageInFrame[currentFrame] = page
+            assignFrame(page, currentFrame, pageInFrame, frameOfPage)
+            frameOfPage[page] = currentFrame
             if (currentFrame == numFrames)
                 currentFrame = 1
             else
                 currentFrame++
-            pageInMemory[page] = true
         }
     }
     frameToSubstitute
@@ -52,12 +59,8 @@ val LRU = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
         } else {
             val currentFrame = substituteCandidates.first().second
             substituteCandidates.remove(substituteCandidates.first())
-            val oldPage = pageInFrame[currentFrame]
-            if (oldPage != null)
-                frameOfPage[oldPage] = null
             frameToSubstitute[accessedIndex] = currentFrame
-            pageInFrame[currentFrame] = page
-            frameOfPage[page] = currentFrame
+            assignFrame(page, currentFrame, pageInFrame, frameOfPage)
             lastUsed[page] = accessedIndex
             substituteCandidates.add(accessedIndex to currentFrame)
         }
@@ -84,12 +87,8 @@ val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
         } else {
             val currentFrame = substituteCandidates.last().second
             substituteCandidates.remove(substituteCandidates.last())
-            val oldPage = pageInFrame[currentFrame]
-            if (oldPage != null)
-                frameOfPage[oldPage] = null
             frameToSubstitute[accessedIndex] = currentFrame
-            pageInFrame[currentFrame] = page
-            frameOfPage[page] = currentFrame
+            assignFrame(page, currentFrame, pageInFrame, frameOfPage)
             substituteCandidates.add((nextPosition[accessedIndex] ?: accessedPages.size) to currentFrame)
         }
     }
@@ -107,11 +106,7 @@ fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>,
         } else {
             if (frameOfPage[page] != null)
                 return false
-            val oldPage = pageInFrame[currentFrame]
-            if (oldPage != null)
-                frameOfPage[oldPage] = null
-            pageInFrame[currentFrame] = page
-            frameOfPage[page] = currentFrame
+            assignFrame(page, currentFrame, pageInFrame, frameOfPage)
         }
     }
     return true
