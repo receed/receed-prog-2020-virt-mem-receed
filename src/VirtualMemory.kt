@@ -97,6 +97,7 @@ val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     frameToSubstitute
 }
 
+
 fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, frameToSubstitute: Array<Int?>): Boolean {
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
@@ -122,13 +123,18 @@ class Task(val numPages: Int, val numFrames: Int, val accessedPages: List<Int>)
 
 class InvalidInputException(message: String) : Exception(message)
 
-fun readInput(inputFile: String): List<Task> {
-    val lines = File(inputFile).readLines().filter {it.isNotEmpty()}
+fun readInput(inputFileName: String): List<Task> {
+    val inputFile = File(inputFileName)
+    if (!inputFile.exists())
+        throw InvalidInputException("$inputFileName: no such file")
+    val lines = inputFile.readLines().filter {it.isNotEmpty()}
     return lines.chunked(2).map { linePair ->
         if (linePair.size != 2)
             throw InvalidInputException("Odd number of lines")
         val constraints = linePair[0].split(" ").map { it.toIntOrNull() }
         val accessedPages = linePair[1].split(" ").map { it.toIntOrNull() }
+        if (constraints.size != 2)
+            throw InvalidInputException("The first line of each test should contain number of pages and number of frames")
         val numPages = constraints[0] ?: throw InvalidInputException("Number of pages isn't a number")
         val numFrames = constraints[1] ?: throw InvalidInputException("Number of frames isn't a number")
         val accessedPagesNumbers = accessedPages.filterNotNull().filter { it in 1..numPages }
@@ -137,20 +143,38 @@ fun readInput(inputFile: String): List<Task> {
         Task(numPages, numFrames, accessedPagesNumbers)
     }
 }
-fun main() {
-    val accessed = generateAccessSequence(5, 20)
-    val resFIFO = FIFO.apply(5, 3, accessed)
-    assert(isValidSubstitution(5, 3, accessed, resFIFO))
-    for (i in resFIFO)
-        println(i)
-    println()
-    val resLRU = LRU.apply(5, 3, accessed)
-    assert(isValidSubstitution(5, 3, accessed, resLRU))
-    for (i in resLRU)
-        println(i)
-    println()
-    val resOPT = OPT.apply(5, 3, accessed)
-    assert(isValidSubstitution(5, 3, accessed, resOPT))
-    for (i in resOPT)
-        println(i)
+
+fun generateReport(task: Task): String {
+    val algorithms = listOf(FIFO to "FIFO", LRU to "LRU", OPT to "OPT")
+    return algorithms.joinToString("\n") { (algorithm, name) ->
+        val result = algorithm.apply(task)
+        val score = countScore(result)
+        val resultString = result.joinToString(" ") { it?.toString() ?: "-1" }
+        "$name (score $score): $resultString"
+    }
+}
+fun runFromFiles(args: Array<String>) {
+    for (inputFileName in args) {
+        val tasks = readInput(inputFileName)
+        val outputFile = File("$inputFileName.out")
+        outputFile.writeText(tasks.joinToString("\n") { generateReport(it) })
+    }
+}
+fun main(args: Array<String>) {
+    runFromFiles(args)
+//    val accessed = generateAccessSequence(5, 20)
+//    val resFIFO = FIFO.apply(5, 3, accessed)
+//    assert(isValidSubstitution(5, 3, accessed, resFIFO))
+//    for (i in resFIFO)
+//        println(i)
+//    println()
+//    val resLRU = LRU.apply(5, 3, accessed)
+//    assert(isValidSubstitution(5, 3, accessed, resLRU))
+//    for (i in resLRU)
+//        println(i)
+//    println()
+//    val resOPT = OPT.apply(5, 3, accessed)
+//    assert(isValidSubstitution(5, 3, accessed, resOPT))
+//    for (i in resOPT)
+//        println(i)
 }
