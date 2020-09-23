@@ -1,9 +1,11 @@
+import java.io.File
 import java.util.*
 import kotlin.random.Random.Default.nextInt
 import kotlin.test.currentStackTrace
 
 fun interface SubstitutionAlgorithm {
     fun apply(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?>
+    fun apply(task: Task): Array<Int?> = apply(task.numPages, task.numFrames, task.accessedPages)
 }
 
 fun assignFrame(page: Int, frame: Int, pageInFrame: Array<Int?>, frameOfPage: Array<Int?>) {
@@ -114,6 +116,27 @@ fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>,
 
 fun generateAccessSequence(numPages: Int, numAccesses: Int) = (1..numAccesses).map {nextInt(1, numPages + 1)}
 
+fun countScore(frameToSubstitute: Array<Int?>) = frameToSubstitute.count {it != null}
+
+class Task(val numPages: Int, val numFrames: Int, val accessedPages: List<Int>)
+
+class InvalidInputException(message: String) : Exception(message)
+
+fun readInput(inputFile: String): List<Task> {
+    val lines = File(inputFile).readLines().filter {it.isNotEmpty()}
+    return lines.chunked(2).map { linePair ->
+        if (linePair.size != 2)
+            throw InvalidInputException("Odd number of lines")
+        val constraints = linePair[0].split(" ").map { it.toIntOrNull() }
+        val accessedPages = linePair[1].split(" ").map { it.toIntOrNull() }
+        val numPages = constraints[0] ?: throw InvalidInputException("Number of pages isn't a number")
+        val numFrames = constraints[1] ?: throw InvalidInputException("Number of frames isn't a number")
+        val accessedPagesNumbers = accessedPages.filterNotNull().filter { it in 1..numPages }
+        if (accessedPagesNumbers.size < accessedPages.size)
+            throw InvalidInputException("Invalid number of accessed page")
+        Task(numPages, numFrames, accessedPagesNumbers)
+    }
+}
 fun main() {
     val accessed = generateAccessSequence(5, 20)
     val resFIFO = FIFO.apply(5, 3, accessed)
