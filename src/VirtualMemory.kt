@@ -1,6 +1,7 @@
 import java.io.File
 import java.util.*
 import kotlin.random.Random.Default.nextInt
+import jetbrains.letsPlot.*
 
 // Describes a common interface for substitution algorithms
 fun interface SubstitutionAlgorithm {
