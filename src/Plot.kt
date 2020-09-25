@@ -90,7 +90,8 @@ class SwingBatikDemoFrontendContext(private val title: String) : FrontendContext
 
 fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
     val accessedPages = generateAccessSequence(numPages, maxAccesses)
-    val step = kotlin.math.max(1, maxAccesses / 1000)
+//    val step = kotlin.math.max(1, maxAccesses / 1000)
+    val step = 1
     val numsAccesses = (1..maxAccesses step step).toList()
     val scores = algorithms.map { algorithm -> numsAccesses.map {numAccesses ->
         countScore(algorithm.first.apply(numPages, numFrames, accessedPages.take(numAccesses))) }}.flatten()
