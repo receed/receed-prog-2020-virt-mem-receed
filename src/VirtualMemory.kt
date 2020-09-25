@@ -104,6 +104,8 @@ val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
     frameToSubstitute
 }
 
+val algorithms = listOf(FIFO to "FIFO", LRU to "LRU", OPT to "OPT")
+
 // Checks if the given substitution list is valid
 fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, frameToSubstitute: Array<Int?>): Boolean {
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
@@ -156,7 +158,6 @@ fun readInput(inputFileName: String): List<Task> {
 
 // Returns results of different algorithms
 fun generateReport(task: Task): String {
-    val algorithms = listOf(FIFO to "FIFO", LRU to "LRU", OPT to "OPT")
     return algorithms.joinToString("\n") { (algorithm, name) ->
         val result = algorithm.apply(task)
         val score = countScore(result)
@@ -177,7 +178,7 @@ fun runFromFiles(files: Array<String>) {
 // Entry point
 fun main(args: Array<String>) {
     runFromFiles(args)
-    drawPlot(5, 3, 100)
+    drawPlot(9, 3, 1000)
 //    val accessed = generateAccessSequence(5, 20)
 //    val resFIFO = FIFO.apply(5, 3, accessed)
 //    assert(isValidSubstitution(5, 3, accessed, resFIFO))

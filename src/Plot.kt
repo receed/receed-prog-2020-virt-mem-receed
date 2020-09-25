@@ -2,10 +2,10 @@ import jetbrains.datalore.plot.MonolithicAwt
 import jetbrains.datalore.vis.svg.SvgSvgElement
 import jetbrains.datalore.vis.swing.BatikMapperComponent
 import jetbrains.datalore.vis.swing.BatikMessageCallback
-import jetbrains.letsPlot.FrontendContext
-import jetbrains.letsPlot.LetsPlot
+import jetbrains.letsPlot.*
+import jetbrains.letsPlot.geom.geom_histogram
 import jetbrains.letsPlot.geom.geom_path
-import jetbrains.letsPlot.lets_plot
+import jetbrains.letsPlot.stat.stat_bin
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
@@ -93,17 +93,20 @@ class SwingBatikDemoFrontendContext(private val title: String) : FrontendContext
 fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
     val accessedPages = generateAccessSequence(numPages, maxAccesses)
     val step = kotlin.math.max(1, maxAccesses / 1000)
-    val numsAccesses = (1..maxAccesses step step)
-    val scoreFIFO = numsAccesses.map { numAccesses ->
-        countScore(FIFO.apply(numPages, numFrames, accessedPages.take(numAccesses)))
-    }
+    val numsAccesses = (1..maxAccesses step step).toList()
+    val scores = algorithms.map { algorithm -> numsAccesses.map {numAccesses ->
+        countScore(algorithm.first.apply(numPages, numFrames, accessedPages.take(numAccesses))) }}.flatten()
+    val types = algorithms.map {algorithm -> List(numsAccesses.size) { algorithm.second }}.flatten()
+    val allNumsAccesses = List(algorithms.size) {numsAccesses}.flatten()
     val data = mapOf(
-            "accesses" to numsAccesses,
-            "FIFO" to scoreFIFO
+            "accesses" to allNumsAccesses,
+            "scores" to scores,
+            "types" to types
     )
     val ctx = SwingBatikDemoFrontendContext("Title")
     LetsPlot.frontendContext = ctx
-    val plot = lets_plot(data) { x="accesses"; y="FIFO" } + geom_path()
+    val plot = lets_plot(data) { x="accesses"; y="scores"; color="types" } + geom_path()
     plot.show()
     ctx.showAll()
 }
+
