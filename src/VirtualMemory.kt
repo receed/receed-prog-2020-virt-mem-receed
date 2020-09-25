@@ -177,8 +177,12 @@ fun runFromFiles(files: Array<String>) {
 
 // Entry point
 fun main(args: Array<String>) {
-    runFromFiles(args)
-    drawPlot(9, 3, 1000)
+    if (args.isEmpty())
+        throw InvalidInputException("No arguments")
+    if (args[0] == "-p")
+        drawPlotByArgs(args.drop(1))
+    else
+        runFromFiles(args)
 //    val accessed = generateAccessSequence(5, 20)
 //    val resFIFO = FIFO.apply(5, 3, accessed)
 //    assert(isValidSubstitution(5, 3, accessed, resFIFO))

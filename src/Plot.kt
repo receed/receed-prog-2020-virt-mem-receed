@@ -3,9 +3,7 @@ import jetbrains.datalore.vis.svg.SvgSvgElement
 import jetbrains.datalore.vis.swing.BatikMapperComponent
 import jetbrains.datalore.vis.swing.BatikMessageCallback
 import jetbrains.letsPlot.*
-import jetbrains.letsPlot.geom.geom_histogram
 import jetbrains.letsPlot.geom.geom_path
-import jetbrains.letsPlot.stat.stat_bin
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
@@ -110,3 +108,13 @@ fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
     ctx.showAll()
 }
 
+fun drawPlotByArgs(args: List<String>) {
+    if (args.isEmpty()) {
+        drawPlot(3, 5, 1000)
+        return
+    }
+    val numbers = args.mapNotNull { it.toIntOrNull() }
+    if (numbers.size != 3)
+        throw InvalidInputException("Usage: -p <numPages> <numFrames> <maxAccesses>")
+    drawPlot(numbers[0], numbers[1], numbers[2])
+}

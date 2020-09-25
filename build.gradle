@@ -37,5 +37,6 @@ kotlin {
     }
 }
 run {
-    args = ["data/test1", "data/test2"]
+    args = ["-p", "7", "6", 10000]
+//    args = ["data/test1", "data/test2"]
 }
