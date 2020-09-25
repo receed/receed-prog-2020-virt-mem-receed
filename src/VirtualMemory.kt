@@ -2,6 +2,7 @@ import java.io.File
 import java.util.*
 import kotlin.random.Random.Default.nextInt
 import jetbrains.letsPlot.*
+import kotlin.math.max
 
 // Describes a common interface for substitution algorithms
 fun interface SubstitutionAlgorithm {
@@ -176,6 +177,7 @@ fun runFromFiles(files: Array<String>) {
 // Entry point
 fun main(args: Array<String>) {
     runFromFiles(args)
+    drawPlot(5, 3, 100)
 //    val accessed = generateAccessSequence(5, 20)
 //    val resFIFO = FIFO.apply(5, 3, accessed)
 //    assert(isValidSubstitution(5, 3, accessed, resFIFO))
