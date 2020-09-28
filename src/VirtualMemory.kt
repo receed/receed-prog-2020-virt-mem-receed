@@ -1,8 +1,6 @@
 import java.io.File
 import java.util.*
 import kotlin.random.Random.Default.nextInt
-import jetbrains.letsPlot.*
-import kotlin.math.max
 
 // Describes a common interface for substitution algorithms
 fun interface SubstitutionAlgorithm {
@@ -130,8 +128,10 @@ fun generateAccessSequence(numPages: Int, numAccesses: Int) = (1..numAccesses).m
 // Counts score (number of substitutions) of the given substitution list
 fun countScore(frameToSubstitute: Array<Int?>) = frameToSubstitute.count {it != null}
 
+// Input for algorithms
 class Task(val numPages: Int, val numFrames: Int, val accessedPages: List<Int>)
 
+// Exception for invalid input
 class InvalidInputException(message: String) : Exception(message)
 
 // Reads constraints and accessed page number from a file
@@ -177,10 +177,15 @@ fun runFromFiles(files: Array<String>) {
 
 // Entry point
 fun main(args: Array<String>) {
-    if (args.isEmpty())
-        throw InvalidInputException("No arguments")
-    if (args[0] == "-p")
-        drawPlotByArgs(args.drop(1))
-    else
-        runFromFiles(args)
+    try {
+        if (args.isEmpty())
+            throw InvalidInputException("No arguments")
+        if (args[0] == "-p")
+            drawPlotByArgs(args.drop(1))
+        else
+            runFromFiles(args)
+    }
+    catch(e: InvalidInputException) {
+        println(e.message)
+    }
 }
