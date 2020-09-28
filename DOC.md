@@ -1,7 +1,7 @@
 # Page Replacement Algorithms
 
 ```
-java -jar virt-mem.jar FILE...
+gradle run --args="FILE..."
 ```
 
 Each of the input files can contain several tests. Each test
@@ -17,7 +17,7 @@ Then, for each access, frame to which the accessed page is loaded
 or 0 if it is already in memory.
 
 ```
-java -jar virt-mem.jar -p NUM_PAGES NUM_FRAMES NUM_ACCESSES
+gradle run --args="-p NUM_PAGES NUM_FRAMES NUM_ACCESSES"
 ```
 Draws plot showing how many times a page will be loaded to memory
 by each algorithm if there are NUM_PAGES pages, NUM_FRAMES frames
