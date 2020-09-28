@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.io.File
 
 internal class VirtualMemoryKtTest {
     private val task1 = Task(5, 3, listOf(1, 3, 2, 4, 1, 4, 5, 3, 2))
@@ -14,5 +15,15 @@ internal class VirtualMemoryKtTest {
     @Test
     fun testOPT() {
         assertArrayEquals(arrayOf(1, 2, 3, 3, null, null, 1, null, 1), OPT.apply(task1))
+    }
+    @Test
+    fun runFromFiles() {
+        val files = arrayOf("data/test1", "data/test2")
+        runFromFiles(files)
+        for (file in files) {
+            val expected = File("$file.a").readLines()
+            val result = File("$file.out").readLines()
+            assertEquals(expected, result)
+        }
     }
 }
