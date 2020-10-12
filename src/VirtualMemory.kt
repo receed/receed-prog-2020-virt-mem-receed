@@ -203,5 +203,7 @@ fun main(args: Array<String>) {
             runFromFiles(args)
     } catch (e: InvalidInputException) {
         println(e.message)
+    } catch (e: Exception) {
+        println("Unknown error")
     }
 }
