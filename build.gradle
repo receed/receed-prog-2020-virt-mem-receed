@@ -1,7 +1,6 @@
 plugins {
     id 'application'
     id 'org.jetbrains.kotlin.jvm' version '1.4.10'
-    id 'org.unbroken-dome.test-sets' version '2.1.1'
 }
 mainClassName = "VirtualMemoryKt"
 
@@ -22,8 +21,16 @@ dependencies {
     api "org.jetbrains.lets-plot:lets-plot-common:1.5.2"
     api "org.jetbrains.lets-plot-kotlin:lets-plot-kotlin-api:1.0.0"
 }
+
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        includeTags 'unitTest'
+    }
+}
+task integration(type: Test) {
+    useJUnitPlatform {
+        includeTags 'integrationTest'
+    }
 }
 jar {
     manifest {
