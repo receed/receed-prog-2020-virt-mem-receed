@@ -93,9 +93,9 @@ fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
 //    val step = kotlin.math.max(1, maxAccesses / 1000)
     val step = 1
     val numsAccesses = (1..maxAccesses step step).toList()
-    val scores = algorithms.map { algorithm -> numsAccesses.map {numAccesses ->
-        countScore(algorithm.first.apply(numPages, numFrames, accessedPages.take(numAccesses))) }}.flatten()
-    val types = algorithms.map {algorithm -> List(numsAccesses.size) { algorithm.second }}.flatten()
+    val scores = algorithms.map { (_, algorithm) -> numsAccesses.map {numAccesses ->
+        countScore(calculateSubstitution(numPages, numFrames, accessedPages.take(numAccesses), algorithm)) }}.flatten()
+    val types = algorithms.map {(name, _) -> List(numsAccesses.size) { name }}.flatten()
     val allNumsAccesses = List(algorithms.size) {numsAccesses}.flatten()
     val data = mapOf(
             "accesses" to allNumsAccesses,

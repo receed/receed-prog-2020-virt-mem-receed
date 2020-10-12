@@ -1,12 +1,8 @@
 import java.io.File
 import java.util.*
 import kotlin.random.Random.Default.nextInt
-
-// Describes a common interface for substitution algorithms
-fun interface SubstitutionAlgorithm {
-    fun apply(numPages: Int, numFrames: Int, accessedPages: List<Int>): Array<Int?>
-    fun apply(task: Task): Array<Int?> = apply(task.numPages, task.numFrames, task.accessedPages)
-}
+import kotlin.reflect.KClass
+import kotlin.reflect.full.primaryConstructor
 
 // Puts page in frame, removing an old page in it
 fun assignFrame(page: Int, frame: Int, pageInFrame: Array<Int?>, frameOfPage: Array<Int?>) {
@@ -15,27 +11,6 @@ fun assignFrame(page: Int, frame: Int, pageInFrame: Array<Int?>, frameOfPage: Ar
         frameOfPage[oldPage] = null
     pageInFrame[frame] = page
     frameOfPage[page] = frame
-}
-
-// First in - first out algorithm
-val FIFO = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
-    val frameOfPage = arrayOfNulls<Int>(numPages + 1)
-    val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
-    val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
-    var currentFrame = 1
-    for ((accessedIndex, page) in accessedPages.withIndex()) {
-        val oldFrame = frameOfPage[page]
-        if (oldFrame == null) {
-            frameToSubstitute[accessedIndex] = currentFrame
-            assignFrame(page, currentFrame, pageInFrame, frameOfPage)
-            frameOfPage[page] = currentFrame
-            if (currentFrame == numFrames)
-                currentFrame = 1
-            else
-                currentFrame++
-        }
-    }
-    frameToSubstitute
 }
 
 // Compares two pairs. Needed to efficiently find best frame in LRU and OPT
@@ -49,60 +24,99 @@ class PairComparator : Comparator<Pair<Int, Int>> {
     }
 }
 
-// Least recently used algorithm
-val LRU = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
-    val frameOfPage = arrayOfNulls<Int>(numPages + 1)
-    val lastUsed = (0..numPages).map { -1 }.toMutableList()
-    val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
-    val substituteCandidates = (1..numFrames).map { -1 to it }.toSortedSet(PairComparator())
-    val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
-    for ((accessedIndex, page) in accessedPages.withIndex()) {
-        val oldFrame = frameOfPage[page]
-        if (oldFrame != null) {
-            substituteCandidates.remove(lastUsed[page] to oldFrame)
-            lastUsed[page] = accessedIndex
-            substituteCandidates.add(accessedIndex to oldFrame)
-        } else {
-            val currentFrame = substituteCandidates.first().second
-            substituteCandidates.remove(substituteCandidates.first())
-            frameToSubstitute[accessedIndex] = currentFrame
-            assignFrame(page, currentFrame, pageInFrame, frameOfPage)
-            lastUsed[page] = accessedIndex
-            substituteCandidates.add(accessedIndex to currentFrame)
-        }
+interface SubstitutionStrategy {
+    fun update(page: Int, oldFrame: Int, accessedIndex: Int)
+
+    fun replace(page: Int, accessedIndex: Int): Int
+}
+
+// First in - first out algorithm
+class FIFOStrategy(numPages: Int, private val numFrames: Int, accessedPages: List<Int>) : SubstitutionStrategy {
+    private var nextFrame = 1
+    override fun update(page: Int, oldFrame: Int, accessedIndex: Int) {
+
     }
-    frameToSubstitute
+
+    override fun replace(page: Int, accessedIndex: Int): Int {
+        val currentFrame = nextFrame
+        if (nextFrame == numFrames)
+            nextFrame = 1
+        else
+            nextFrame++
+        return currentFrame
+    }
+}
+
+// Least recently used algorithm
+class LRUStrategy(numPages: Int, numFrames: Int, accessedPages: List<Int>) : SubstitutionStrategy {
+    private val lastUsed = (0..numPages).map { -1 }.toMutableList()
+    private val substituteCandidates = (1..numFrames).map { -1 to it }.toSortedSet(PairComparator())
+
+    override fun update(page: Int, oldFrame: Int, accessedIndex: Int) {
+        substituteCandidates.remove(lastUsed[page] to oldFrame)
+        lastUsed[page] = accessedIndex
+        substituteCandidates.add(accessedIndex to oldFrame)
+    }
+
+    override fun replace(page: Int, accessedIndex: Int): Int {
+        val currentFrame = substituteCandidates.first().second
+        substituteCandidates.remove(substituteCandidates.first())
+        lastUsed[page] = accessedIndex
+        substituteCandidates.add(accessedIndex to currentFrame)
+        return currentFrame
+    }
 }
 
 // Optimal algorithm
-val OPT = SubstitutionAlgorithm { numPages, numFrames, accessedPages ->
-    val lastPosition = arrayOfNulls<Int>(numPages + 1)
-    val nextPosition = arrayOfNulls<Int>(accessedPages.size)
-    for ((accessedIndex, page) in accessedPages.withIndex().reversed()) {
-        nextPosition[accessedIndex] = lastPosition[page]
-        lastPosition[page] = accessedIndex
+class OPTStrategy(numPages: Int, numFrames: Int, private val accessedPages: List<Int>): SubstitutionStrategy {
+    private val lastPosition = arrayOfNulls<Int>(numPages + 1)
+    private val nextPosition = arrayOfNulls<Int>(accessedPages.size)
+    private val substituteCandidates = (1..numFrames).map { -accessedPages.size to it }.toSortedSet(PairComparator())
+    init {
+        for ((accessedIndex, page) in accessedPages.withIndex().reversed()) {
+            nextPosition[accessedIndex] = lastPosition[page]
+            lastPosition[page] = accessedIndex
+        }
     }
+
+    override fun update(page: Int, oldFrame: Int, accessedIndex: Int) {
+        substituteCandidates.remove(-accessedIndex to oldFrame)
+        substituteCandidates.add(-(nextPosition[accessedIndex] ?: accessedPages.size) to oldFrame)
+    }
+
+    override fun replace(page: Int, accessedIndex: Int): Int {
+        val currentFrame = substituteCandidates.first().second
+        substituteCandidates.remove(substituteCandidates.first())
+        substituteCandidates.add(-(nextPosition[accessedIndex] ?: accessedPages.size) to currentFrame)
+        return currentFrame
+    }
+}
+
+// Calculates result of given substitution algorithm
+// fun<reified T: SubstitutionStrategy> ... and then strategy = T::class.primaryConstructor()?.call ...
+// didn't work with cycle when running all algorithms
+fun<T: SubstitutionStrategy> calculateSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, strategyClass: KClass<T>): Array<Int?> {
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
-    val substituteCandidates = (1..numFrames).map { -accessedPages.size to it }.toSortedSet(PairComparator())
     val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
+    val strategy = strategyClass.primaryConstructor?.call(numPages, numFrames, accessedPages) ?: error("no constructor for strategy")
     for ((accessedIndex, page) in accessedPages.withIndex()) {
         val oldFrame = frameOfPage[page]
         if (oldFrame != null) {
-            substituteCandidates.remove(-accessedIndex to oldFrame)
-            substituteCandidates.add(-(nextPosition[accessedIndex] ?: accessedPages.size) to oldFrame)
+            strategy.update(page, oldFrame, accessedIndex)
         } else {
-            val currentFrame = substituteCandidates.first().second
-            substituteCandidates.remove(substituteCandidates.first())
-            frameToSubstitute[accessedIndex] = currentFrame
+            val currentFrame = strategy.replace(page, accessedIndex)
             assignFrame(page, currentFrame, pageInFrame, frameOfPage)
-            substituteCandidates.add(-(nextPosition[accessedIndex] ?: accessedPages.size) to currentFrame)
+            frameToSubstitute[accessedIndex] = currentFrame
         }
     }
-    frameToSubstitute
+    return frameToSubstitute
 }
+// Same as above, but takes Task data class as a parameter
+fun<T: SubstitutionStrategy> calculateSubstitution(task: Task, strategyClass: KClass<T>): Array<Int?> =
+        calculateSubstitution(task.numPages, task.numFrames, task.accessedPages, strategyClass)
 
-val algorithms = listOf(FIFO to "FIFO", LRU to "LRU", OPT to "OPT")
+val algorithms = listOf("FIFO" to FIFOStrategy::class, "LRU" to LRUStrategy::class, "OPT" to OPTStrategy::class)
 
 // Checks if the given substitution list is valid
 fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, frameToSubstitute: Array<Int?>): Boolean {
@@ -123,10 +137,10 @@ fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>,
 }
 
 // Generates random sequence of accessed page numbers
-fun generateAccessSequence(numPages: Int, numAccesses: Int) = (1..numAccesses).map {nextInt(1, numPages + 1)}
+fun generateAccessSequence(numPages: Int, numAccesses: Int) = (1..numAccesses).map { nextInt(1, numPages + 1) }
 
 // Counts score (number of substitutions) of the given substitution list
-fun countScore(frameToSubstitute: Array<Int?>) = frameToSubstitute.count {it != null}
+fun countScore(frameToSubstitute: Array<Int?>) = frameToSubstitute.count { it != null }
 
 // Input for algorithms
 class Task(val numPages: Int, val numFrames: Int, val accessedPages: List<Int>)
@@ -139,7 +153,7 @@ fun readInput(inputFileName: String): List<Task> {
     val inputFile = File(inputFileName)
     if (!inputFile.exists())
         throw InvalidInputException("$inputFileName: no such file")
-    val lines = inputFile.readLines().filter {it.isNotEmpty()}
+    val lines = inputFile.readLines().filter { it.isNotEmpty() }
     return lines.chunked(2).map { linePair ->
         if (linePair.size != 2)
             throw InvalidInputException("Odd number of lines")
@@ -158,8 +172,8 @@ fun readInput(inputFileName: String): List<Task> {
 
 // Returns results of different algorithms
 fun generateReport(task: Task): String {
-    return algorithms.joinToString("\n") { (algorithm, name) ->
-        val result = algorithm.apply(task)
+    return algorithms.joinToString("\n") { (name, algorithm) ->
+        val result = calculateSubstitution(task, algorithm)
         val score = countScore(result)
         val resultString = result.joinToString(" ") { it?.toString() ?: "0" }
         "$name (score $score): $resultString"
@@ -177,6 +191,8 @@ fun runFromFiles(files: Array<String>) {
 
 // Entry point
 fun main(args: Array<String>) {
+//    val s = SubstitutionStrategy
+//    calculateSubstitution(0, 0, listOf()) { SubstitutionStrategy(it) }
     try {
         if (args.isEmpty())
             throw InvalidInputException("No arguments")
@@ -184,8 +200,7 @@ fun main(args: Array<String>) {
             drawPlotByArgs(args.drop(1))
         else
             runFromFiles(args)
-    }
-    catch(e: InvalidInputException) {
+    } catch (e: InvalidInputException) {
         println(e.message)
     }
 }

@@ -7,17 +7,17 @@ internal class VirtualMemoryKtTest {
 
     @Test
     fun testFIFO() {
-        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 1, 2), FIFO.apply(task1))
+        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 1, 2), calculateSubstitution(task1, FIFOStrategy::class))
     }
 
     @Test
     fun testLRU() {
-        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 2, 1), LRU.apply(task1))
+        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 2, 1), calculateSubstitution(task1, LRUStrategy::class))
     }
 
     @Test
     fun testOPT() {
-        assertArrayEquals(arrayOf(1, 2, 3, 3, null, null, 1, null, 1), OPT.apply(task1))
+        assertArrayEquals(arrayOf(1, 2, 3, 3, null, null, 1, null, 1), calculateSubstitution(task1, OPTStrategy::class))
     }
 
     @Test
