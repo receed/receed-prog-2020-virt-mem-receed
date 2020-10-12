@@ -68,10 +68,11 @@ class LRUStrategy(numPages: Int, numFrames: Int, accessedPages: List<Int>) : Sub
 }
 
 // Optimal algorithm
-class OPTStrategy(numPages: Int, numFrames: Int, private val accessedPages: List<Int>): SubstitutionStrategy {
+class OPTStrategy(numPages: Int, numFrames: Int, private val accessedPages: List<Int>) : SubstitutionStrategy {
     private val lastPosition = arrayOfNulls<Int>(numPages + 1)
     private val nextPosition = arrayOfNulls<Int>(accessedPages.size)
     private val substituteCandidates = (1..numFrames).map { -accessedPages.size to it }.toSortedSet(PairComparator())
+
     init {
         for ((accessedIndex, page) in accessedPages.withIndex().reversed()) {
             nextPosition[accessedIndex] = lastPosition[page]
@@ -95,11 +96,12 @@ class OPTStrategy(numPages: Int, numFrames: Int, private val accessedPages: List
 // Calculates result of given substitution algorithm
 // fun<reified T: SubstitutionStrategy> ... and then strategy = T::class.primaryConstructor()?.call ...
 // didn't work with cycle when running all algorithms
-fun<T: SubstitutionStrategy> calculateSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, strategyClass: KClass<T>): Array<Int?> {
+fun <T : SubstitutionStrategy> calculateSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>, strategyClass: KClass<T>): Array<Int?> {
     val frameOfPage = arrayOfNulls<Int>(numPages + 1)
     val pageInFrame = arrayOfNulls<Int>(numFrames + 1)
     val frameToSubstitute = arrayOfNulls<Int>(accessedPages.size)
-    val strategy = strategyClass.primaryConstructor?.call(numPages, numFrames, accessedPages) ?: error("no constructor for strategy")
+    val strategy = strategyClass.primaryConstructor?.call(numPages, numFrames, accessedPages)
+            ?: error("no constructor for strategy")
     for ((accessedIndex, page) in accessedPages.withIndex()) {
         val oldFrame = frameOfPage[page]
         if (oldFrame != null) {
@@ -112,8 +114,9 @@ fun<T: SubstitutionStrategy> calculateSubstitution(numPages: Int, numFrames: Int
     }
     return frameToSubstitute
 }
+
 // Same as above, but takes Task data class as a parameter
-fun<T: SubstitutionStrategy> calculateSubstitution(task: Task, strategyClass: KClass<T>): Array<Int?> =
+fun <T : SubstitutionStrategy> calculateSubstitution(task: Task, strategyClass: KClass<T>): Array<Int?> =
         calculateSubstitution(task.numPages, task.numFrames, task.accessedPages, strategyClass)
 
 val algorithms = listOf("FIFO" to FIFOStrategy::class, "LRU" to LRUStrategy::class, "OPT" to OPTStrategy::class)
@@ -157,15 +160,13 @@ fun readInput(inputFileName: String): List<Task> {
     return lines.chunked(2).map { linePair ->
         if (linePair.size != 2)
             throw InvalidInputException("Odd number of lines")
-        val constraints = linePair[0].split(" ").map { it.toIntOrNull() }
-        val accessedPages = linePair[1].split(" ").map { it.toIntOrNull() }
-        if (constraints.size != 2)
+        val (numPages, numFrames) = linePair[0].split(" ").map { it.toIntOrNull() }
+        if (numPages == null || numFrames == null)
             throw InvalidInputException("The first line of each test should contain number of pages and number of frames")
-        val numPages = constraints[0] ?: throw InvalidInputException("Number of pages isn't a number")
-        val numFrames = constraints[1] ?: throw InvalidInputException("Number of frames isn't a number")
+        val accessedPages = linePair[1].split(" ").map { it.toIntOrNull() }
         val accessedPagesNumbers = accessedPages.filterNotNull().filter { it in 1..numPages }
         if (accessedPagesNumbers.size < accessedPages.size)
-            throw InvalidInputException("Invalid number of accessed page")
+            throw InvalidInputException("Invalid number of accessed pages")
         Task(numPages, numFrames, accessedPagesNumbers)
     }
 }
