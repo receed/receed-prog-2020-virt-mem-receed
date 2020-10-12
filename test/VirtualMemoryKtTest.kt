@@ -1,5 +1,14 @@
+package test.kotlin
+
+import FIFOStrategy
+import LRUStrategy
+import OPTStrategy
+import Task
+import calculateSubstitution
+import countScore
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import runFromFiles
 import java.io.File
 
 internal class VirtualMemoryKtTest {

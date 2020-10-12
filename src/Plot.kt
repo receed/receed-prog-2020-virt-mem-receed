@@ -93,10 +93,13 @@ fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
 //    val step = kotlin.math.max(1, maxAccesses / 1000)
     val step = 1
     val numsAccesses = (1..maxAccesses step step).toList()
-    val scores = algorithms.map { (_, algorithm) -> numsAccesses.map {numAccesses ->
-        countScore(calculateSubstitution(numPages, numFrames, accessedPages.take(numAccesses), algorithm)) }}.flatten()
-    val types = algorithms.map {(name, _) -> List(numsAccesses.size) { name }}.flatten()
-    val allNumsAccesses = List(algorithms.size) {numsAccesses}.flatten()
+    val scores = algorithms.map { (_, algorithm) ->
+        numsAccesses.map { numAccesses ->
+            countScore(calculateSubstitution(numPages, numFrames, accessedPages.take(numAccesses), algorithm))
+        }
+    }.flatten()
+    val types = algorithms.map { (name, _) -> List(numsAccesses.size) { name } }.flatten()
+    val allNumsAccesses = List(algorithms.size) { numsAccesses }.flatten()
     val data = mapOf(
             "accesses" to allNumsAccesses,
             "scores" to scores,
@@ -104,7 +107,7 @@ fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
     )
     val ctx = SwingBatikDemoFrontendContext("Title")
     LetsPlot.frontendContext = ctx
-    val plot = lets_plot(data) { x="accesses"; y="scores"; color="types" } + geom_path()
+    val plot = lets_plot(data) { x = "accesses"; y = "scores"; color = "types" } + geom_path()
     plot.show()
     ctx.showAll()
 }
