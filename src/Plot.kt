@@ -95,7 +95,8 @@ fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
     val numsAccesses = (1..maxAccesses step step).toList()
     val scores = algorithms.map { (_, algorithm) ->
         numsAccesses.map { numAccesses ->
-            countScore(calculateSubstitution(numPages, numFrames, accessedPages.take(numAccesses), algorithm))
+            countScore(algorithm(Task(numPages, numFrames, accessedPages.take(numAccesses))))
+//            countScore(calculateSubstitution(numPages, numFrames, accessedPages.take(numAccesses), algorithm))
         }
     }.flatten()
     val types = algorithms.map { (name, _) -> List(numsAccesses.size) { name } }.flatten()

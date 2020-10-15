@@ -2,7 +2,6 @@ import FIFOStrategy
 import LRUStrategy
 import OPTStrategy
 import Task
-import calculateSubstitution
 import countScore
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -16,17 +15,17 @@ internal class VirtualMemoryKtTest {
 
     @Test
     fun testFIFO() {
-        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 1, 2), calculateSubstitution(task1, FIFOStrategy::class))
+        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 1, 2), FIFOStrategy(task1).apply())
     }
 
     @Test
     fun testLRU() {
-        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 2, 1), calculateSubstitution(task1, LRUStrategy::class))
+        assertArrayEquals(arrayOf(1, 2, 3, 1, 2, null, 3, 2, 1), LRUStrategy(task1).apply())
     }
 
     @Test
     fun testOPT() {
-        assertArrayEquals(arrayOf(1, 2, 3, 3, null, null, 1, null, 1), calculateSubstitution(task1, OPTStrategy::class))
+        assertArrayEquals(arrayOf(1, 2, 3, 3, null, null, 1, null, 1), OPTStrategy(task1).apply())
     }
 
     @Test
