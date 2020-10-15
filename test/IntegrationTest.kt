@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Tag
 internal class IntegrationTest {
     @Test
     fun runFromFiles() {
-        val files = arrayOf("data/test1", "data/test2")
+        val files = arrayOf("data/test1", "data/test2", "data/test3")
         main(files)
         for (file in files) {
             val expected = File("$file.a").readLines()
