@@ -1,8 +1,3 @@
-import FIFOStrategy
-import LRUStrategy
-import OPTStrategy
-import Task
-import countScore
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import runFromFiles

@@ -6,7 +6,6 @@ import countScore
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Tag
-import runFromFiles
 import java.io.File
 
 @Tag("unitTest")

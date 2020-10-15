@@ -1,8 +1,6 @@
 import java.io.File
 import java.util.*
 import kotlin.random.Random.Default.nextInt
-import kotlin.reflect.KClass
-import kotlin.reflect.full.primaryConstructor
 
 // Puts page in frame, removing an old page in it
 fun assignFrame(page: Int, frame: Int, pageInFrame: Array<Int?>, frameOfPage: Array<Int?>) {
