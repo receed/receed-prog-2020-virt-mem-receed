@@ -195,8 +195,6 @@ fun runFromFiles(files: Array<String>) {
 
 // Entry point
 fun main(args: Array<String>) {
-//    val s = SubstitutionStrategy
-//    calculateSubstitution(0, 0, listOf()) { SubstitutionStrategy(it) }
     try {
         if (args.isEmpty())
             throw InvalidInputException("No arguments")

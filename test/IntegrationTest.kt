@@ -9,11 +9,15 @@ internal class IntegrationTest {
     @Test
     fun runFromFiles() {
         val files = arrayOf("data/test1", "data/test2")
-        runFromFiles(files)
+        main(files)
         for (file in files) {
             val expected = File("$file.a").readLines()
             val result = File("$file.out").readLines()
             assertEquals(expected, result)
         }
+    }
+    @Test
+    fun drawPlot() {
+        main(arrayOf("-p", "7", "6", "1000"))
     }
 }

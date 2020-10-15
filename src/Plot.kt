@@ -84,19 +84,17 @@ class SwingBatikDemoFrontendContext(private val title: String) : FrontendContext
             }
         }
 
-        private val FRAME_SIZE = Dimension(700, 700)
+        private val FRAME_SIZE = Dimension(600, 400)
     }
 }
 
 fun drawPlot(numPages: Int, numFrames: Int, maxAccesses: Int) {
     val accessedPages = generateAccessSequence(numPages, maxAccesses)
-//    val step = kotlin.math.max(1, maxAccesses / 1000)
-    val step = 1
-    val numsAccesses = (1..maxAccesses step step).toList()
+    println("Generated access sequence: ${accessedPages.joinToString(" ")}")
+    val numsAccesses = (1..maxAccesses).toList()
     val scores = algorithms.map { (_, algorithm) ->
         numsAccesses.map { numAccesses ->
             countScore(algorithm(Task(numPages, numFrames, accessedPages.take(numAccesses))))
-//            countScore(calculateSubstitution(numPages, numFrames, accessedPages.take(numAccesses), algorithm))
         }
     }.flatten()
     val types = algorithms.map { (name, _) -> List(numsAccesses.size) { name } }.flatten()
