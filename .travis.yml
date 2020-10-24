@@ -1,2 +1,4 @@
 language: java
-after_success: bash integration.sh
+script:
+- gradle check
+- bash integration
