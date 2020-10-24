@@ -145,7 +145,7 @@ fun isValidSubstitution(numPages: Int, numFrames: Int, accessedPages: List<Int>,
 }
 
 // Generates random sequence of accessed page numbers
-fun generateAccessSequence(numPages: Int, numAccesses: Int) = (1..numAccesses).map { nextInt(1, numPages + 1) }
+fun generateAccessSequence(numPages: Int, numAccesses: Int) = List(numAccesses) { nextInt(1, numPages + 1) }
 
 // Counts score (number of substitutions) of the given substitution list
 fun countScore(frameToSubstitute: Array<Int?>) = frameToSubstitute.count { it != null }
